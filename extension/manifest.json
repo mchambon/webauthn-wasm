@@ -1,0 +1,72 @@
+{
+    "manifest_version": 3,
+    "name": "Passcoco Extension",
+    "short_name": "Passcoco",
+    "description": "Passcoco extension. This extension is used to access Passcoco Frontend.",
+    "version": "0.423.33",
+    "author": "@matcha",
+    "minimum_chrome_version": "110",
+    "offline_enabled": false,
+    "action": {
+        "default_title": "Passcoco Frontend access",
+        "default_icon": {
+            "16": "assets/toolbar_icon_16.png",
+            "19": "assets/toolbar_icon_19.png",
+            "32": "assets/toolbar_icon_32.png",
+            "38": "assets/toolbar_icon_38.png"
+        }
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src https://www.google.fr https://webauthn.io https://passcoco.com http://localhost:8080 http://*/* https://*/*; img-src 'self' data: blob: https://www.google.fr https://webauthn.io https://passcoco.com http://localhost:8080 http://*/* https://*/*; style-src 'self' 'unsafe-inline';"
+   },
+
+
+    "permissions": [
+        "webRequest",
+        "storage",
+        "scripting",
+        "activeTab",
+        "tabs",
+        "webRequest" 
+      ],
+      "host_permissions": ["<all_urls>", 
+        "*://webauthn.io/*", 
+        "https://www.google.fr/*",
+        "http://localhost:8080/*",
+        "https://passcoco/*",
+        "http://*/*",
+        "https://*/*"
+      ],
+
+
+      "background": {
+        "type": "module",   
+        "service_worker": "js/background.js"
+      },
+      "content_scripts": [
+        {
+          "matches": ["<all_urls>"],
+          "js": ["js/content.js"]
+        }
+      ],
+      "web_accessible_resources": [
+        {
+            "matches": [
+                "<all_urls>",
+                "https://webauthn.io/*"
+            ],
+            "resources": [
+                "js/wasm/snippets/wasm_mod-bc4ca452742d1bb1/src/progress.js",
+                "js/wasm/*",
+                "js/wasm/wasm_mod.js",
+                "./js/wasm/wasm_mod.js",
+                "js/wasm/wasm_mod_bg.wasm",
+                "wasm/wasm_mod.js",
+                "wasm/wasm_mod_bg.wasm",
+                "js/register.js",
+                "js/icon.js", 
+                "js/testmod.js",
+                "unavailable.html"]
+        }
+      ]
+}
