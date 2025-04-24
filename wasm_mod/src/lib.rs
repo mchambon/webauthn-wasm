@@ -118,10 +118,51 @@ pub fn hello_from_auth(&self) -> String {
     pub fn get_assertion(&self, request_js: JsValue) -> Result<JsValue, JsValue> {
         console::log_1(&JsValue::from_str("Processing get_assertion request"));
         
+        // Deserialize the request
+        let request: Ctap2GetRequest = if request_js.is_string() {
+            let request_str = request_js.as_string().unwrap();
+            match serde_json::from_str(&request_str) {
+                Ok(req) => req,
+                Err(e) => {
+                    let error_msg = format!("Error parsing JSON string: {}", e);
+                    console::log_1(&JsValue::from_str(&error_msg));
+                    return Err(JsValue::from_str(&error_msg));
+                }
+            }
+        } else {
+            match serde_wasm_bindgen::from_value(request_js) {
+                Ok(req) => req,
+                Err(e) => {
+                    let error_msg = format!("Deserialization error from JsValue: {}", e);
+                    console::log_1(&JsValue::from_str(&error_msg));
+                    return Err(JsValue::from_str(&error_msg));
+                }
+            }
+        };
+        
+
+/*
+
         // Convert JsValue to Ctap2GetRequest
         let request: Ctap2GetRequest = serde_wasm_bindgen::from_value(request_js)
             .map_err(|e| JsValue::from_str(&format!("Deserialization error: {}", e)))?;
             
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         // Process the request
         let response = self.handle_get_assertion(request)
             .map_err(|e| JsValue::from_str(&e))?;
@@ -240,25 +281,40 @@ pub fn hello_from_auth(&self) -> String {
         Ok(response)
     }
 
+
+
     fn handle_get_assertion(&self, request: Ctap2GetRequest) -> Result<GetAssertionResponse, String> {
         console::log_1(&JsValue::from_str("Processing getAssertion"));
         
-        // Get credentials - correctly access the Arc<Mutex<HashMap>>
+        // Get credentials
         let credentials_guard = self.state.credentials.lock().map_err(|e| format!("Mutex lock failed: {}", e))?;
         
-        // Convert the CredentialDescriptor to AllowCredential format needed by select_or_create_credential
-        let allow_credentials: Vec<AllowCredential> = request.allow_credentials.iter().map(|desc| AllowCredential {
+        // Safely extract authenticator_data and rp_id
+        let auth_data = request.authenticator_data.as_ref().ok_or("No authenticator data provided")?;
+        let rp_id = auth_data.rp_id.as_ref().ok_or("No RP ID provided")?;
+        
+        // Safely extract allow_credentials - provide empty vector as default if None
+        let binding = Vec::new();
+        let allow_creds = auth_data.allow_credentials.as_ref().unwrap_or(&binding);
+        
+
+
+
+        // Convert the CredentialDescriptor to AllowCredential format
+        let allow_credentials: Vec<AllowCredential> = allow_creds.iter().map(|desc| AllowCredential {
             id: desc.id.clone(),
             type_: desc.type_.clone(),
         }).collect();
         
         // Find the credential
-        let credential = select_or_create_credential(&credentials_guard, &request.rp_id, &allow_credentials)
+        let credential = select_or_create_credential(&credentials_guard, rp_id, &allow_credentials)
             .ok_or("No credentials found".to_string())?;
         
+        console::log_1(&JsValue::from_str("#################### TRAITEMENT ASSERTION ####################"));
+    
         // Generate auth data and signature
-        let rp_id_hash = hash_rp_id(&request.rp_id);
-        let auth_data = generate_auth_data(&rp_id_hash, &credential.credential_id, &credential.public_key, false);
+        let rp_id_hash = hash_rp_id(rp_id);
+        let auth_data_bytes = generate_auth_data(&rp_id_hash, &credential.credential_id, &credential.public_key, false);
         
         // Generate client data JSON
         let client_data_json = generate_client_data_json(&request.client_data_json);
@@ -269,7 +325,7 @@ pub fn hello_from_auth(&self) -> String {
         
         // Prepare data to sign
         let mut data_to_sign = Vec::new();
-        data_to_sign.extend_from_slice(&auth_data);
+        data_to_sign.extend_from_slice(&auth_data_bytes);
         data_to_sign.extend_from_slice(&client_data_hash);
         
         // Sign the data
@@ -279,7 +335,7 @@ pub fn hello_from_auth(&self) -> String {
         // Create response
         let response = GetAssertionResponse {
             credential_id: encode_to_base64(&credential.credential_id),
-            authenticator_data: encode_to_base64(&auth_data),
+            authenticator_data: encode_to_base64(&auth_data_bytes),
             signature: encode_to_base64(&signature_bytes),
             client_data_json: encode_to_base64(client_data_json_bytes),
             user_handle: if credential.user_id.is_empty() {

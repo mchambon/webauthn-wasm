@@ -59,16 +59,7 @@ pub struct Rp {
     pub name: String,
 }
 
-/*
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Ctap2CreateRequest {
-    #[serde(rename = "clientDataJSON")]
-    pub client_data_json: ClientDataJSON,
-    pub rp: RpEntity,
-    pub user: UserEntity,
-    #[serde(rename = "pubKeyCredParams")]
-    pub pub_key_cred_params: Vec<PubKeyCredParam>,
-}*/
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Ctap2CreateRequest {
@@ -105,23 +96,40 @@ pub struct User {
 
 
 
-/********************************************** */
 
-
-
-
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Ctap2GetRequest {
+    #[serde(rename = "type")]
+    pub type_: String,
     #[serde(rename = "clientDataJSON")]
     pub client_data_json: ClientDataJSON,
-    #[serde(rename = "rpId")]
-    pub rp_id: String,
-    #[serde(rename = "allowCredentials")]
-    pub allow_credentials: Vec<AllowCredential>,
-    #[serde(rename = "userVerification")]
-    pub user_verification: String,
+    #[serde(rename = "authenticatorData")]
+    pub authenticator_data: Option<AuthenticatorData>,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct AuthenticatorData {
+    #[serde(rename = "rpId")]
+    pub rp_id: Option<String>,
+    #[serde(rename = "allowCredentials")]
+    pub allow_credentials: Option<Vec<CredentialDescriptor>>,
+    #[serde(rename = "userVerification")]
+    pub user_verification: Option<String>,
+}
+
+
+
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct CredentialDescriptor {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub type_: String,
+}
+
+
+/********************************************** */
+
 
 #[derive(Serialize, Deserialize)]
 pub struct MakeCredentialResponse {
@@ -146,9 +154,3 @@ pub struct GetAssertionResponse {
     pub user_handle: Option<String>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
-pub struct CredentialDescriptor {
-    pub id: String,
-    #[serde(rename = "type")]
-    pub type_: String,
-}

@@ -15,13 +15,6 @@ const injectScript = (filePath, isModule = false) => {
   (document.head || document.documentElement).appendChild(script);
 };
 
-
-
-
-
-
-
-
 // Écouteur pour les messages depuis les scripts injectés
 window.addEventListener('message', function(event) {
     // Vérifier l'origine du message
@@ -30,10 +23,7 @@ window.addEventListener('message', function(event) {
       
       const message = event.data.payload;
       
-
       //console.log("XXXXXXXXXXXXXXXXX: Données :", JSON.stringify(event.data.payload.payload, null, 2));
-
-
 
       // Traiter le message et l'envoyer au background script
       chrome.runtime.sendMessage(message, (response) => {
@@ -56,12 +46,7 @@ window.addEventListener('message', function(event) {
         
         // Renvoyer la réponse du background au script injecté
         console.log("Content script: Received response from background:", response);
-
-
-
-
-
-        
+       
         window.postMessage({
           source: "webauthn-content-script",
           response: {
@@ -74,13 +59,6 @@ window.addEventListener('message', function(event) {
       });
     }
   });
-
-
-
-
-
-
-
 
 // Test : Envoyer 'helloWorld' au background au chargement
 function testHelloWorld() {
@@ -117,15 +95,9 @@ function testHelloFromAuth() {
   });
 }
 
-
-
-
-
-
 // Injection de icon.js
 injectScript('js/icon.js');
 console.log("Content script: Injection de icon.js effectuée");
-
 
 injectScript('js/register.js');
 console.log("Content script: Injection de register.js effectuée");

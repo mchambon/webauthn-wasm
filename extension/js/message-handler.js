@@ -34,25 +34,25 @@ export function setupMessageListener() {
                         if (!message.payload) {
                              throw new Error("Credential object is required for register.");
                         }
-                        console.log("Payload avant appel:", JSON.stringify(message.payload, null, 2));
+                        //console.log("Payload avant appel:", JSON.stringify(message.payload, null, 2));
                         
                         responseData = callRegisterFromAuth(message.payload);
                         
-                        console.log(">>>>>>>>>>>>>>>>>>>>>>>> Données après appel:", JSON.stringify(responseData, null, 2));
+                        //console.log(">>>>>>>>>>>>>>>>>>>>>>>> Données après appel:", JSON.stringify(responseData, null, 2));
                         
                         sendResponse({ success: true, data: responseData });
-                    break;
+                        break;
 
 
 
                     case 'callLoginFromAuth':
-                        if (!message.payload || !message.payload.credential) {
+                        if (!message.payload) {
                              throw new Error("Credential object is required for login.");
                         }
-                        responseData = callLogin(message.payload.credential);
+                        responseData = callLoginFromAuth(message.payload);
                         sendResponse({ success: true, data: responseData });
                         break;
-
+/*
                     case 'parseResponseText': // Si vous avez besoin de parser du texte brut reçu ailleurs
                          if (!message.payload || typeof message.payload.text !== 'string') {
                              throw new Error("Text string is required for parseResponseText.");
@@ -60,7 +60,7 @@ export function setupMessageListener() {
                         responseData = callParseResponseText(message.payload.text);
                         sendResponse({ success: true, data: responseData });
                         break;
-
+*/
                     default:
                         console.warn("Unknown action received:", message.action);
                         sendResponse({ success: false, error: `Unknown action: ${message.action}` });

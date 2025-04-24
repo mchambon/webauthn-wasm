@@ -128,14 +128,13 @@ export function callLoginFromAuth(getResponseJson) {
     ensureWasmInitialized();
     console.log("wasm-handler: Calling login with response:", getResponseJson);
     try {
-        const responseString = typeof getResponseJson === 'string' ? getResponseJson : JSON.stringify(getResponseJson);
-        //const resultJson = wasm_login(responseString);
-        console.log("wasm-handler: login raw result:", resultJson);
-        //const result = JSON.parse(resultJson); // Ou retournez la string si c'est juste un message
-        
-        result="Not yet implemented";
+        if (!_authenticator) {
+            console.error("Authenticator instance is null or undefined");
+            throw new Error("Authenticator not initialized");
+        }
 
-        console.log("wasm-handler: login parsed result:", result);
+        const result = _authenticator.get_assertion(getResponseJson);
+
         return result;
     } catch (error) {
         console.error("wasm-handler: Error calling or parsing login:", error);
